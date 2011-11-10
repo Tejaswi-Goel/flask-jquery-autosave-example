@@ -2,9 +2,11 @@
   <head>
   <title>jQuery.autosave Examples</title>
 
+  <link href="/static/uploadify/uploadify.css" type="text/css" rel="stylesheet" />
   <link type="text/css" rel="stylesheet" href="/static/styles.css" />
-
-  <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.min.js"></script>
+  <script type="text/javascript" src="/static/uploadify/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="/static/uploadify/swfobject.js"></script>
+  <script type="text/javascript" src="/static/uploadify/jquery.uploadify.v2.1.4.min.js"></script>
   <script type="text/javascript" src="/static/jquery.autosave.min.js"></script>
 
   <script type="text/javascript">
@@ -75,6 +77,24 @@
          $(this).attr("count", $(this).val().length);
       });
     });
+
+    $(document).ready(function() {
+      $('#file_upload').uploadify({
+        'uploader': '/static/uploadify/uploadify.swf',
+        'script': '/',
+        'cancelImg': '/static/uploadify/cancel.png',
+        'auto': false,
+        'multi': true,
+	    'queueSizeLimit': 10,
+        'removeCompleted': false, // Could set to true, then list completed uploads onComplete
+	    'onSelect': function(event, ID, fileObj) {
+            $('#upload_link').show();
+        },
+	    'onAllComplete': function(event, data) {
+            $('#upload_link').hide();
+        }
+      });
+    });
   </script>
   </head>
   <body>
@@ -131,6 +151,9 @@
     <form name="example2" id="example2">
       <input name="text2" type="text" value="" />
     </form>
+
+    <input id="file_upload" name="file_upload" type="file" />
+    <a id="upload_link" href="javascript:$('#file_upload').uploadifyUpload()" style="display:none">Upload Files</a>
 
     <button type="button" name="save">Save</button>
   </body>

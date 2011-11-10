@@ -1,7 +1,42 @@
+import os
+
 from flask import Flask, jsonify, render_template, request
+
+from werkzeug.utils import secure_filename
+
+
+# Set this configuration to absolute or relative path to upload directory.
+UPLOAD_FOLDER = 'files'
+
+
+def init_app(app):
+    "Initialize app object. Create upload folder if it does not exist."
+    if not os.path.isabs(app.config['UPLOAD_FOLDER']):
+        folder = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])
+        app.config['UPLOAD_FOLDER'] = folder
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
 
 app = Flask(__name__)
+app.config.from_object(__name__)
+init_app(app)
+
+
+def save_file(filestorage, app=app):
+    "Save a Werkzeug file storage object to the upload folder."
+    filename = secure_filename(filestorage.filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filestorage.save(filepath)
+
+
+def save_files(request=request, app=app):
+    "Save all files in a request to the app's upload folder."
+    for _, filestorage in request.files.iteritems():
+        # Workaround: larger uploads cause a dummy file named '<fdopen>'.
+        # See the Flask mailing list for more information.
+        if filestorage.filename not in (None, 'fdopen', '<fdopen>'):
+            save_file(filestorage, app=app)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -12,6 +47,15 @@ def index():
         # Return the form as-is to provide a round-trip demo.
         return jsonify(**request.form)
     return render_template('index.html')
+
+
+@app.route('/attach/', methods=['GET', 'POST'])
+def attach():
+    if request.method == 'POST':
+        save_files()
+        return 'Uploaded'
+    if request.method == 'GET':
+        return render_template('index.html')
 
 
 if __name__ == '__main__':
